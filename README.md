@@ -83,7 +83,7 @@ O programa implementa o RSA "puro", realizando:
 
 ## Autores
 
-André Luiz Toyama Zanello
-Gabriel Felipe dos Reis Martins
-Júlia Rocha
-Samira Pedreira
+- André Luiz Toyama Zanello
+- Gabriel Felipe dos Reis Martins
+- Júlia Rocha
+- Samira Pedreira
