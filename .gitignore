@@ -1,0 +1,12 @@
+# Ignorar todos os arquivos .txt exceto as chaves
+*.txt
+!public_key.txt
+!private_key.txt
+
+# Ignorar arquivos criptografados
+*.enc
+
+# Ignorar arquivos do Python
+__pycache__/
+*.py[cod]
+*$py.class
