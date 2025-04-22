@@ -81,6 +81,9 @@ O programa implementa o RSA "puro", realizando:
 - Criptografia/descriptografia usando exponenciação modular
 - Armazenamento seguro das chaves
 
-## Autor
+## Autores
 
-Desenvolvido como projeto acadêmico para a disciplina de Segurança da Informação da FATEC-RP.
+André Luiz Toyama Zanello
+Gabriel Felipe dos Reis Martins
+Júlia Rocha
+Samira Pedreira
