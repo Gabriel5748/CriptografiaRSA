@@ -1,54 +1,75 @@
 //Teoricamente temos o E aqui
-function calcularMdc(n, tamanho) {
-    let e = [];
-    let divisor = 1;
+function calcularE(totiente) {
+    let eValores = [];
+    
+    for (let candidato = 3; candidato < totiente; candidato += 2) {
 
-    while (e.length < tamanho && divisor < n) {
-        if (gcd(divisor, n) === 1) {
-            e.push(divisor);
+        if (gcd(candidato, totiente) === 1) {
+            const d = acharD(candidato, totiente);
+            
+            if (d !== null && d > 1 && (candidato * d) % totiente === 1) {
+                eValores.push(candidato);
+            }
         }
-        divisor++;
     }
 
-    if (e.length === 0) {
-        throw new Error("Não foi possível encontrar valores coprimos.");
+    if (eValores.length === 0) {
+        throw new Error("Não foi possível encontrar valores de e válidos que gerem d válido.");
     }
 
-    let indice = Math.floor(Math.random() * e.length);
-    console.log(`Possíveis valores de e: ${e}`);
-
-    return e[indice];
+    return eValores[Math.floor(Math.random() * eValores.length)];
 }
 
-//Função auxiliar - máximo divisor comum
 function gcd(a, b) {
-    return b === 0 ? a : gcd(b, a % b);
+    while (b !== 0) {
+        [a, b] = [b, a % b];
+    }
+    return a;
 }
 
-//Fórmula usada para calcular o número de coprimos em relação à um número
 function totiente(p, q) {
     return (p - 1) * (q - 1);
 }
 
-//Recebe o E da nossa função de calcular MDC e o nosso número de coprimos do totiente
-//Retorna o D
-function acharD(e, totiente) {
-    let i = 1;
-    while (i < totiente) {
-        if ((e * i) % totiente == 1) {
-            console.log("d vale: " + i);
-            return i;
-        }
-        i++;
+function euclidesEstendido(a, b) {
+    if (b === 0) {
+        return { mdc: a, x: 1, y: 0 };
     }
-    console.log("Não foi encontrado um d válido.");
-    return null;
+    
+    let [old_r, r] = [a, b];
+    let [old_s, s] = [1, 0];
+    let [old_t, t] = [0, 1];
+    
+    while (r !== 0) {
+        const quociente = Math.floor(old_r / r);
+        [old_r, r] = [r, old_r - quociente * r];
+        [old_s, s] = [s, old_s - quociente * s];
+        [old_t, t] = [t, old_t - quociente * t];
+    }
+    
+    return { mdc: old_r, x: old_s, y: old_t };
 }
 
-//Temos o N
+function acharD(e, totiente) {
+    const { mdc, x } = euclidesEstendido(e, totiente);
+    
+    if (mdc !== 1) {
+        return null;
+    }
+    
+    let d = ((x % totiente) + totiente) % totiente;
+    
+    if ((e * d) % totiente !== 1) {
+        console.log(`Atenção: d=${d} não é o inverso modular válido para e=${e}`);
+        return null;
+    }
+    
+    return d;
+}
+
 function acharN(p, q) {
     return p * q;
 }
 
 
-module.exports = {calcularMdc,totiente,acharD,acharN};
+module.exports = { calcularE, totiente, acharD, acharN };

@@ -1,0 +1,18 @@
+{
+    "_comentario": "E - CHAVE PUBLICA, D - CHAVE PRIVADA",
+    "chavesRSA": {
+        "p": null,
+        "q": null,
+        "n": null,
+        "e": null,
+        "d": null,
+        "coprimos": null,
+        "chave_publica": null,
+        "chave_privada": null
+    },
+    "mensagens": {
+        "ultima_mensagem": null,
+        "historico": null,
+        "mensagem_criptografada": null
+    }
+}
