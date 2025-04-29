@@ -44,28 +44,36 @@ function criptografarRSA(mensagem, e, n) {
 }
 
 function descriptografarRSA(mensagemC, d, n) {
+
     // 1. Validação dos parâmetros
     if (typeof mensagemC !== 'string' || !Number.isInteger(d) || !Number.isInteger(n) || n <= 0) {
-        throw new Error('Parâmetros inválidos para descriptografia RSA');
+        console.warn('Parâmetros inválidos para descriptografia RSA');
     }
 
     // 2. Converter string cifrada para array de números
     const blocosCifrados = mensagemC.split(' ').filter(Boolean).map(num => {
         const parsed = parseInt(num, 10);
-        if (isNaN(parsed)) throw new Error('Mensagem cifrada contém valores não numéricos');
+        if (isNaN(parsed)) {
+            throw new Error('Mensagem cifrada contém valores não numéricos');
+        }
         return parsed;
     });
 
     // 3. Descriptografar cada bloco
     let mensagemASCII = '';
     for (const bloco of blocosCifrados) {
-        // Verifica se o bloco é menor que n
-        if (bloco >= n) {
-            throw new Error(`Valor cifrado ${bloco} é maior ou igual ao módulo n=${n}`);
+        // Verifica se o bloco é menor que n e não negativo
+        if (bloco >= n || bloco < 0) {
+            throw new Error(`Valor cifrado ${bloco} é inválido para o módulo n=${n}`);
         }
 
         // Usa BigInt para cálculos seguros com números grandes
-        const asciiNumber = Number(modPow(BigInt(bloco), BigInt(d), BigInt(n)));
+        let asciiNumber;
+        try {
+            asciiNumber = Number(modPow(BigInt(bloco), BigInt(d), BigInt(n)));
+        } catch (e) {
+            throw new Error(`Erro durante a descriptografia: ${e.message}. Chaves podem estar incorretas.`);
+        }
 
         // Verifica se o resultado é um código ASCII válido
         if (asciiNumber < 0 || asciiNumber > 255) {
@@ -78,43 +86,6 @@ function descriptografarRSA(mensagemC, d, n) {
     return mensagemASCII;
 }
 
-// function modPow(base, exp, mod) {
-//     let res = 1;
-//     base %= mod;
-
-//     while (exp > 0) {
-//         if (exp % 2 === 1) {
-//             res = (res * base) % mod;
-//         }
-//         exp = Math.floor(exp / 2);
-//         base = (base * base) % mod;
-//     }
-
-//     return res;
-// }
-
-// Funções auxiliares
-function addPKCS1Padding(block, targetLength) {
-    const padded = Buffer.alloc(targetLength);
-    const padLength = targetLength - block.length - 3;
-
-    padded[0] = 0x00;
-    padded[1] = 0x02; // Padding para encriptação
-
-    // Preencher com bytes aleatórios (não zeros)
-    for (let i = 2; i < 2 + padLength; i++) {
-        padded[i] = Math.floor(Math.random() * 255) + 1;
-    }
-
-    padded[2 + padLength] = 0x00;
-    block.copy(padded, 3 + padLength);
-
-    return padded;
-}
-
-function bufferToBigInt(buffer) {
-    return BigInt('0x' + buffer.toString('hex'));
-}
 
 function modPow(base, exponent, modulus) {
     // Implementação segura de exponenciação modular

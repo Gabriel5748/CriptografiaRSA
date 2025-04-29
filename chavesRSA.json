@@ -1,18 +1,35 @@
 {
     "_comentario": "E - CHAVE PUBLICA, D - CHAVE PRIVADA",
     "chavesRSA": {
-        "p": null,
-        "q": null,
-        "n": null,
-        "e": null,
-        "d": null,
-        "coprimos": null,
-        "chave_publica": null,
-        "chave_privada": null
+        "p": "17",
+        "q": "67",
+        "n": 1139,
+        "e": 337,
+        "d": 1009,
+        "coprimos": 1056,
+        "chave_publica": "{ 337 , 1139 }",
+        "chave_privada": "{ 1009 , 1139 }"
     },
     "mensagens": {
-        "ultima_mensagem": null,
-        "historico": null,
+        "mensagem_atual": "teste",
+        "historico": [
+            {
+                "mensagem": "teste",
+                "criptografia": "490 152 1135 490 152",
+                "chaves": {
+                    "publica": "{ 449 , 1139 }",
+                    "privada": "{ 929 , 1139 }"
+                }
+            },
+            {
+                "mensagem": "teste",
+                "criptografia": "575 815 319 575 815",
+                "chaves": {
+                    "publica": "{ 337 , 1139 }",
+                    "privada": "{ 1009 , 1139 }"
+                }
+            }
+        ],
         "mensagem_criptografada": null
     }
 }

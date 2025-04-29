@@ -1,7 +1,19 @@
 const readline = require('readline');
-const { calcularE, acharN, totiente, acharD } = require('./chaves');
+const { calcularE, acharN, totiente, acharD } = require('./calculo_chaves');
 const { criptografarRSA, descriptografarRSA } = require('./criptografia/criptografiaRSA');
-const { atualizarChaves, atualizarMensagem, atualizarPrimos, atualizarCoprimos, adicionarMensagemHistorico, limparDados } = require('./leitura_chaves');
+const { atualizarChaves, atualizarMensagemAtual, atualizarPrimos, atualizarCoprimos, adicionarMensagemHistorico, verHistorico, limparDados } = require('./leitura_chaves');
+
+//Talvez dê para melhorar isso - deixar para depois
+let mensagemInput = '';
+let mensagemCriptografada = '';
+let mensagemDescriptografada = '';
+let p = null;
+let q = null;
+let n = null;
+let e = null;
+let d = null;
+let coprimos = null;
+
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -16,7 +28,12 @@ const pergunta = (pergunta) => {
     });
 }
 
+function eNumero(valor) {
+    return typeof valor === 'number' && !isNaN(valor);
+}
+
 function verificarPrimo(num) {
+    if (!eNumero(num)) return false;
     if (num <= 1) return false;
     if (num <= 3) return true;
 
@@ -27,30 +44,6 @@ function verificarPrimo(num) {
     }
     return true;
 }
-
-// let mensagemAtual = '';
-// let mensagemCriptografada = '';
-// let mensagemDescriptografada = '';
-// let chavesRSA = {
-//     p: null,
-//     q: null,
-//     n: null,
-//     e: null,
-//     d: null,
-//     coprimos: null
-// }
-
-//Talvez dê para melhorar isso - deixar para depois
-let mensagemInput = '';
-let mensagemCriptografada = '';
-let mensagemDescriptografada = '';
-let p = null;
-let q = null;
-let n = null;
-let e = null;
-let d = null;
-let coprimos = null;
-
 
 async function escolherNumerosPrimos() {
     do {
@@ -80,17 +73,11 @@ function calcularChaves() {
     atualizarChaves(e, d, n);
     atualizarCoprimos(coprimos);
 
-    //DECLARAR OUTRA FUNÇÃO SÓ PARA EXIBIR ISSO
-
-    // console.log("=== CHAVES RSA ===");
-    // console.log(`🔓 Chave Pública: (e = ${chavesRSA.e}, n = ${chavesRSA.n})`);
-    // console.log(`🔐 Chave Privada: (d = ${chavesRSA.d}, n = ${chavesRSA.n})`);
-    // console.log(`🧮 Valores internos: p = ${chavesRSA.p}, q = ${chavesRSA.q}, φ(n) = ${chavesRSA.coprimos}`);
-
 }
 
 async function escreverMensagem() {
     mensagemInput = await pergunta('Escreva sua mensagem: ');
+    atualizarMensagemAtual(mensagemInput);
 
     await menu();
 }
@@ -98,15 +85,16 @@ async function escreverMensagem() {
 async function menu() {
     let opcao = '';
 
-    while (opcao !== '7') {
+    while (opcao !== '8') {
         console.log("\n=== Menu Principal ===");
         console.log("1. Escolher números primos");
         console.log("2. Calcular chaves");
         console.log("3. Escrever mensagem");
         console.log("4. Criptografar mensagem");
         console.log("5. Descriptografar mensagem");
-        console.log("6. Limpar dados");
-        console.log("7. Sair");
+        console.log("6. Ver histórico de mensagens");
+        console.log("7. Excluir Dados");
+        console.log("8. Sair");
 
         opcao = await pergunta('Informe a opção desejada: ')
 
@@ -117,34 +105,36 @@ async function menu() {
             case '2':
                 calcularChaves();
 
-                //Talvez não deva ficar aqui
-                // atualizarChaves(e, d);
-                // atualizarCoprimos(coprimos);
                 break;
             case '3':
-
-            //Botar pra atualizar a mensagem que o usuario digitar aqui
+                //Botar pra atualizar a mensagem que o usuario digitar aqui
                 escreverMensagem();
                 break;
             case '4':
                 mensagemCriptografada = criptografarRSA(mensagemInput, e, n);
-                console.log(`Mensagem criptografada: ${mensagemCriptografada}`);
 
-                //Têm que botar pra atualizar so a mensagem C 
-                atualizarMensagem(mensagemInput, mensagemCriptografada);
+                atualizarMensagemAtual(mensagemCriptografada);
 
+                let chaves = {
+                    publica: `{ ${e} , ${n} }`,
+                    privada: `{ ${d} , ${n} }`
+                };
 
-                //Botando aqui pq a partir do momento q ele faz a criptografia, a mensagem ja esta salva
-                adicionarMensagemHistorico(mensagemInput);
+                adicionarMensagemHistorico(mensagemInput, mensagemCriptografada, chaves);
                 break;
             case '5':
                 mensagemDescriptografada = descriptografarRSA(mensagemCriptografada, d, n);
-                // console.log(`Mensagem descriptografada: ${mensagemDescriptografada}`);
+                atualizarMensagemAtual(mensagemDescriptografada);
                 break;
             case '6':
-                limparDados();
+                verHistorico();
                 break;
             case '7':
+                limparDados();
+                break;
+            case '8':
+                //Toda vez que o algoritmo for encerrado ele limpa os dados
+                limparDados();
                 console.log("Saindo...");
                 rl.close();
                 return;

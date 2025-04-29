@@ -15,7 +15,7 @@ function salvarEstado(dados) {
 }
 
 // Modificando o estado
-function atualizarChaves(chavePublica, chavePrivada,n) {
+function atualizarChaves(chavePublica, chavePrivada, n) {
     estado.chavesRSA.e = chavePublica;
     estado.chavesRSA.d = chavePrivada;
     estado.chavesRSA.n = n;
@@ -25,38 +25,65 @@ function atualizarChaves(chavePublica, chavePrivada,n) {
     estado.chavesRSA.chave_privada = `{ ${chavePrivada} , ${n} }`;
 
     salvarEstado(estado);
-    console.log("🔐 Chaves atualizadas!");
+    console.warn("🔐 Chaves atualizadas!");
 }
 
-function atualizarMensagem(mensagem, mensagemC) {
+function atualizarMensagemAtual(mensagem) {
 
 
-    estado.mensagens.ultima_mensagem = mensagem;
-    estado.mensagens.mensagem_criptografada = mensagemC;
+    estado.mensagens.mensagem_atual = mensagem;
 
     salvarEstado(estado);
 }
 
-function atualizarPrimos(primo1,primo2) {
+function atualizarPrimos(primo1, primo2) {
     estado.chavesRSA.p = primo1;
     estado.chavesRSA.q = primo2;
 
     salvarEstado(estado);
 }
 
-function atualizarCoprimos(coprimos){
+function atualizarCoprimos(coprimos) {
     estado.chavesRSA.coprimos = coprimos;
 
     salvarEstado(estado);
 }
 
-function adicionarMensagemHistorico(mensagem) {
+function adicionarMensagemHistorico(mensagem, criptografia, chaves) {
+    if (!mensagem || !criptografia) {
+        console.warn("Mensagem ou criptografia inválida. Nada foi salvo.");
+        return;
+    }
+
     if (!estado.mensagens) estado.mensagens = { historico: [] };
     if (!Array.isArray(estado.mensagens.historico)) estado.mensagens.historico = [];
 
-    estado.mensagens.historico.push(mensagem);
+    const objeto = {
+        mensagem: mensagem,
+        criptografia: criptografia,
+        chaves: chaves
+    };
+
+    if (estado.mensagens.historico.some(item =>
+        JSON.stringify(item) === JSON.stringify(objeto)
+    )) {
+        return;
+    } else {
+        estado.mensagens.historico.push(objeto);
+    }
 
     salvarEstado(estado);
+}
+
+
+function verHistorico() {
+    if (!estado.mensagens || !Array.isArray(estado.mensagens.historico) || estado.mensagens.historico.length === 0) {
+        console.warn("Histórico vazio!");
+    } else {
+        for (const objeto of estado.mensagens.historico) {
+            console.log(`Mensagem: ${objeto.mensagem}, Criptografia: ${objeto.criptografia}`);
+        }
+    }
 }
 
 function limparDados() {
@@ -64,11 +91,11 @@ function limparDados() {
         estado.chavesRSA[chave] = null;
     }
 
-    for(let chave in estado.mensagens){
+    for (let chave in estado.mensagens) {
         estado.mensagens[chave] = null;
     }
     salvarEstado(estado);
 }
 
 
-module.exports = { atualizarChaves, atualizarMensagem, atualizarPrimos,atualizarCoprimos,adicionarMensagemHistorico, limparDados};
+module.exports = { atualizarChaves, atualizarMensagemAtual, atualizarPrimos, atualizarCoprimos, adicionarMensagemHistorico, verHistorico, limparDados };
