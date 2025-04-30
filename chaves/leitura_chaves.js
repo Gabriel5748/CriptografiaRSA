@@ -49,7 +49,7 @@ function atualizarCoprimos(coprimos) {
     salvarEstado(estado);
 }
 
-function adicionarMensagemHistorico(mensagem, criptografia, chaves) {
+function adicionarMensagemHistorico(mensagem, criptografia) {
     if (!mensagem || !criptografia) {
         console.warn("Mensagem ou criptografia inválida. Nada foi salvo.");
         return;
@@ -61,7 +61,10 @@ function adicionarMensagemHistorico(mensagem, criptografia, chaves) {
     const objeto = {
         mensagem: mensagem,
         criptografia: criptografia,
-        chaves: chaves
+        chaves: {
+            publica: estado.chavesRSA.chave_publica,
+            privada: estado.chavesRSA.chave_privada,
+        }
     };
 
     if (estado.mensagens.historico.some(item =>

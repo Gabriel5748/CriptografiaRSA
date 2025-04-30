@@ -6,10 +6,8 @@ function criptografarRSA(mensagem, e, n) {
         throw new Error('Parâmetros inválidos');
     }
 
-    // 2. Tamanho do bloco ajustado para n pequeno
-    const blockSize = Math.max(1, Math.floor(Math.log2(n) / 8) - 1); // Reduz padding para caber em n pequeno
+    const blockSize = Math.max(1, Math.floor(Math.log2(n) / 8) - 1);
 
-    // 3. Converter mensagem para ASCII (suporta apenas caracteres 0-255)
     const asciiArray = [];
     for (let i = 0; i < mensagem.length; i++) {
         const code = mensagem.charCodeAt(i);
@@ -19,23 +17,19 @@ function criptografarRSA(mensagem, e, n) {
         asciiArray.push(code);
     }
 
-    // 4. Criptografar cada bloco (ajustado para n pequeno)
     const cifrados = [];
     for (let i = 0; i < asciiArray.length; i += blockSize) {
         const bloco = asciiArray.slice(i, i + blockSize);
 
-        // Converter bloco ASCII para número (ex: [72, 69] -> 7269)
         let numeroBloco = 0;
         for (const code of bloco) {
-            numeroBloco = numeroBloco * 1000 + code; // Usa 3 dígitos por código ASCII
+            numeroBloco = numeroBloco * 1000 + code;
         }
 
-        // Verificar se o bloco cabe em n
         if (numeroBloco >= n) {
             throw new Error(`Bloco ${numeroBloco} é maior que n=${n}. Reduza o tamanho do bloco ou use n maior.`);
         }
 
-        // Criptografar com RSA (usando BigInt para evitar overflow)
         const cifrado = BigInt(numeroBloco) ** BigInt(e) % BigInt(n);
         cifrados.push(cifrado.toString());
     }
@@ -45,12 +39,10 @@ function criptografarRSA(mensagem, e, n) {
 
 function descriptografarRSA(mensagemC, d, n) {
 
-    // 1. Validação dos parâmetros
     if (typeof mensagemC !== 'string' || !Number.isInteger(d) || !Number.isInteger(n) || n <= 0) {
         console.warn('Parâmetros inválidos para descriptografia RSA');
     }
 
-    // 2. Converter string cifrada para array de números
     const blocosCifrados = mensagemC.split(' ').filter(Boolean).map(num => {
         const parsed = parseInt(num, 10);
         if (isNaN(parsed)) {
@@ -59,15 +51,12 @@ function descriptografarRSA(mensagemC, d, n) {
         return parsed;
     });
 
-    // 3. Descriptografar cada bloco
     let mensagemASCII = '';
     for (const bloco of blocosCifrados) {
-        // Verifica se o bloco é menor que n e não negativo
         if (bloco >= n || bloco < 0) {
             throw new Error(`Valor cifrado ${bloco} é inválido para o módulo n=${n}`);
         }
 
-        // Usa BigInt para cálculos seguros com números grandes
         let asciiNumber;
         try {
             asciiNumber = Number(modPow(BigInt(bloco), BigInt(d), BigInt(n)));
@@ -75,7 +64,6 @@ function descriptografarRSA(mensagemC, d, n) {
             throw new Error(`Erro durante a descriptografia: ${e.message}. Chaves podem estar incorretas.`);
         }
 
-        // Verifica se o resultado é um código ASCII válido
         if (asciiNumber < 0 || asciiNumber > 255) {
             throw new Error(`Valor descriptografado inválido: ${asciiNumber}. Chaves podem estar incorretas.`);
         }
@@ -88,7 +76,6 @@ function descriptografarRSA(mensagemC, d, n) {
 
 
 function modPow(base, exponent, modulus) {
-    // Implementação segura de exponenciação modular
     let result = 1n;
     base = base % modulus;
 

@@ -1,86 +1,8 @@
-const readline = require('readline');
-const { calcularE, acharN, totiente, acharD } = require('./calculo_chaves');
-const { criptografarRSA, descriptografarRSA } = require('./criptografia/criptografiaRSA');
-const { atualizarChaves, atualizarMensagemAtual, atualizarPrimos, atualizarCoprimos, adicionarMensagemHistorico, verHistorico, limparDados } = require('./leitura_chaves');
-
-//Talvez dê para melhorar isso - deixar para depois
-let mensagemInput = '';
-let mensagemCriptografada = '';
-let mensagemDescriptografada = '';
-let p = null;
-let q = null;
-let n = null;
-let e = null;
-let d = null;
-let coprimos = null;
-
-
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-
-const pergunta = (pergunta) => {
-    return new Promise((resolve) => {
-        rl.question(pergunta, (resposta) => {
-            resolve(resposta);
-        });
-    });
-}
-
-function eNumero(valor) {
-    return typeof valor === 'number' && !isNaN(valor);
-}
-
-function verificarPrimo(num) {
-    if (!eNumero(num)) return false;
-    if (num <= 1) return false;
-    if (num <= 3) return true;
-
-    if (num % 2 === 0 || num % 3 === 0) return false;
-
-    for (let i = 5; i * i <= num; i += 6) {
-        if (num % i === 0 || num % (i + 2) === 0) return false;
-    }
-    return true;
-}
-
-async function escolherNumerosPrimos() {
-    do {
-        p = await pergunta('Informe um número primo: ');
-        if (!verificarPrimo(Number(p))) {
-            console.log('Número inválido! Digite um número primo.');
-        }
-    } while (!verificarPrimo(Number(p)));
-
-    do {
-        q = await pergunta('Informe outro número primo: ');
-        if (!verificarPrimo(Number(q))) {
-            console.log('Número inválido! Digite um número primo.');
-        }
-    } while (!verificarPrimo(Number(q)));
-
-    atualizarPrimos(p, q);
-    await menu();
-}
-
-function calcularChaves() {
-    n = acharN(p, q);
-    coprimos = totiente(p, q);
-    e = calcularE(n);
-    d = acharD(e, coprimos);
-
-    atualizarChaves(e, d, n);
-    atualizarCoprimos(coprimos);
-
-}
-
-async function escreverMensagem() {
-    mensagemInput = await pergunta('Escreva sua mensagem: ');
-    atualizarMensagemAtual(mensagemInput);
-
-    await menu();
-}
+const criptografiaController = require('./criptografia/criptografiaRSA');
+const chavesController = require('./chaves/leitura_chaves');
+const inputController = require('./functions/menu_actions/input_utils');
+const actions = require('./functions/menu_actions/menu_actions');
+const estado = require('./models/estado');
 
 async function menu() {
     let opcao = '';
@@ -96,47 +18,36 @@ async function menu() {
         console.log("7. Excluir Dados");
         console.log("8. Sair");
 
-        opcao = await pergunta('Informe a opção desejada: ')
+        opcao = await inputController.pergunta('Informe a opção desejada: ');
 
         switch (opcao) {
             case '1':
-                escolherNumerosPrimos();
+                await actions.escolherNumerosPrimos();
                 break;
             case '2':
-                calcularChaves();
-
+                actions.calcularChaves();
                 break;
             case '3':
-                //Botar pra atualizar a mensagem que o usuario digitar aqui
-                escreverMensagem();
+                await actions.escreverMensagem();
                 break;
             case '4':
-                mensagemCriptografada = criptografarRSA(mensagemInput, e, n);
-
-                atualizarMensagemAtual(mensagemCriptografada);
-
-                let chaves = {
-                    publica: `{ ${e} , ${n} }`,
-                    privada: `{ ${d} , ${n} }`
-                };
-
-                adicionarMensagemHistorico(mensagemInput, mensagemCriptografada, chaves);
+                estado.mensagemCriptografada = criptografiaController.criptografarRSA(estado.mensagemInput,estado.e,estado.n);
+                chavesController.atualizarMensagemAtual(estado.mensagemCriptografada);
+                chavesController.adicionarMensagemHistorico(estado.mensagemInput,estado.mensagemCriptografada);
                 break;
             case '5':
-                mensagemDescriptografada = descriptografarRSA(mensagemCriptografada, d, n);
-                atualizarMensagemAtual(mensagemDescriptografada);
+                estado.mensagemDescriptografada = criptografiaController.descriptografarRSA(estado.mensagemCriptografada,estado.d,estado.n);
+                chavesController.atualizarMensagemAtual(estado.mensagemDescriptografada);
                 break;
             case '6':
-                verHistorico();
+                actions.verHistoricoMensagens();
                 break;
             case '7':
-                limparDados();
+                actions.excluirDados();
                 break;
             case '8':
-                //Toda vez que o algoritmo for encerrado ele limpa os dados
-                limparDados();
-                console.log("Saindo...");
-                rl.close();
+                actions.excluirDados();
+                actions.fecharPrograma();
                 return;
             default:
                 console.log("\nOpção inválida!");
@@ -144,6 +55,5 @@ async function menu() {
     }
 }
 
-
-module.exports = { rl, pergunta, menu }
+module.exports = { menu }
 

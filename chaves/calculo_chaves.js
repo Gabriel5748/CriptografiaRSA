@@ -1,4 +1,3 @@
-//Teoricamente temos o E aqui
 function calcularE(totiente) {
     let eValores = [];
 
