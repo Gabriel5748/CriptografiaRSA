@@ -1,4 +1,5 @@
-const estado = require('../../models/estado');
+// const estado = require('../../models/estado');
+const estadoRSA = require('../../chaves/leitura_chaves');
 const auxFunctionController = require('../../functions/aux_functions');
 const inputController = require('./input_utils');
 const chavesController = require('../../chaves/leitura_chaves');
@@ -6,47 +7,51 @@ const { acharN, totiente, calcularE, acharD } = require('../../chaves/calculo_ch
 const criptografiaController = require('../../criptografia/criptografiaRSA');
 
 async function escolherNumerosPrimos() {
-    do {
-        estado.p = await inputController.pergunta('Informe um número primo: ');
-        if (!auxFunctionController.verificarPrimo(Number(estado.p))) {
-            console.log('Número inválido! Digite um número primo.');
-        }
-    } while (!auxFunctionController.verificarPrimo(Number(estado.p)));
+    if (!estadoRSA.estado.primosSelecionados) {
+        do {
+            estadoRSA.estado.p = await inputController.pergunta('Informe um número primo: ');
+            if (!auxFunctionController.verificarPrimo(Number(estadoRSA.estado.p))) {
+                console.log('Número inválido! Digite um número primo.');
+            }
+        } while (!auxFunctionController.verificarPrimo(Number(estadoRSA.estado.p)));
 
-    do {
-        estado.q = await inputController.pergunta('Informe outro número primo: ');
-        if (!auxFunctionController.verificarPrimo(Number(estado.q))) {
-            console.log('Número inválido! Digite um número primo.');
-        }
-    } while (!auxFunctionController.verificarPrimo(Number(estado.q)));
+        do {
+            estadoRSA.estado.q = await inputController.pergunta('Informe outro número primo: ');
+            if (!auxFunctionController.verificarPrimo(Number(estadoRSA.estado.q))) {
+                console.log('Número inválido! Digite um número primo.');
+            }
+        } while (!auxFunctionController.verificarPrimo(Number(estadoRSA.estado.q)));
 
-    chavesController.atualizarPrimos(estado.p, estado.q);
+        chavesController.atualizarPrimos(estadoRSA.estado.p, estadoRSA.estado.q);
+    }else{
+        console.warn("⚠️  Você já calculou as chaves. Para escolher novos primos, exclua os dados atuais (opção 7)");
+    }
 }
 
+
 function calcularChaves() {
-    estado.n = acharN(estado.p, estado.q);
-    estado.coprimos = totiente(estado.p, estado.q);
-    estado.e = calcularE(estado.n);
-    estado.d = acharD(estado.e, estado.coprimos);
-    chavesController.atualizarChaves(estado.e, estado.d, estado.n);
-    chavesController.atualizarCoprimos(estado.coprimos);
+    estadoRSA.estado.n = acharN(estadoRSA.estado.p, estadoRSA.estado.q);
+    estadoRSA.estado.coprimos = totiente(estadoRSA.estado.p, estadoRSA.estado.q);
+    estadoRSA.estado.e = calcularE(estadoRSA.estado.n);
+    estadoRSA.estado.d = acharD(estadoRSA.estado.e, estadoRSA.estado.coprimos);
+    chavesController.atualizarChaves(estadoRSA.estado.e, estadoRSA.estado.d, estadoRSA.estado.n, estadoRSA.estado.coprimos);
 }
 
 async function escreverMensagem() {
-    estado.mensagemInput = await inputController.pergunta('Escreva sua mensagem: ');
-    chavesController.atualizarMensagemAtual(estado.mensagemInput);
+    estadoRSA.estado.mensagemInput = await inputController.pergunta('Escreva sua mensagem: ');
+    chavesController.atualizarMensagemAtual(estadoRSA.estado.mensagemInput);
 
-    // await menuController.menu();
+    estadoRSA.estado.mensagemEscrita = true;
 
 }
 
 function criptografarMensagem() {
-    estado.mensagemCriptografada = criptografiaController.criptografarRSA(estado.mensagemInput, estado.e, estado.n);
-    chavesController.adicionarMensagemHistorico(estado.mensagemInput, estado.mensagemCriptografada);
+    estadoRSA.estado.mensagemCriptografada = criptografiaController.criptografarRSA(estadoRSA.estado.mensagemInput, estadoRSA.estado.e, estadoRSA.estado.n);
+    chavesController.adicionarMensagemHistorico(estadoRSA.estado.mensagemInput, estadoRSA.estado.mensagemCriptografada);
 }
 
 function descriptografarMensagem() {
-    criptografiaController.descriptografarRSA(estado.mensagemCriptografada, estado.d, estado.n);
+    criptografiaController.descriptografarRSA(estadoRSA.estado.mensagemCriptografada, estadoRSA.estado.d, estadoRSA.estado.n);
 }
 
 function verHistoricoMensagens() {

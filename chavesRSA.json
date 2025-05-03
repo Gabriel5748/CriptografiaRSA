@@ -11,7 +11,13 @@
         "chave_privada": null
     },
     "mensagens": {
-        "mensagem_atual": null,
-        "historico": null
-    }
+        "historico": null,
+        "mensagem_atual": null
+    },
+    "primosSelecionados": false,
+    "chavesGeradas": false,
+    "mensagemEscrita": false,
+    "criptografada": false,
+    "p": "17",
+    "q": "67"
 }

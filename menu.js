@@ -2,7 +2,6 @@ const criptografiaController = require('./criptografia/criptografiaRSA');
 const chavesController = require('./chaves/leitura_chaves');
 const inputController = require('./functions/menu_actions/input_utils');
 const actions = require('./functions/menu_actions/menu_actions');
-const estado = require('./models/estado');
 
 async function menu() {
     let opcao = '';
@@ -15,7 +14,7 @@ async function menu() {
         console.log("4. Criptografar mensagem");
         console.log("5. Descriptografar mensagem");
         console.log("6. Ver histórico de mensagens");
-        console.log("7. Excluir Dados");
+        console.log("7. Limpar chaves");
         console.log("8. Sair");
 
         opcao = await inputController.pergunta('Informe a opção desejada: ');
