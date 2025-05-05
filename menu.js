@@ -2,9 +2,11 @@ const criptografiaController = require('./criptografia/criptografiaRSA');
 const chavesController = require('./chaves/leitura_chaves');
 const inputController = require('./functions/menu_actions/input_utils');
 const actions = require('./functions/menu_actions/menu_actions');
+const estadoRSA = require('./chaves/leitura_chaves');
 
 async function menu() {
-    let opcao = '';
+    let opcao;
+    let mensagem;
 
     while (opcao !== '8') {
         console.log("\n=== Menu Principal ===");
@@ -27,22 +29,26 @@ async function menu() {
                 actions.calcularChaves();
                 break;
             case '3':
-                await actions.escreverMensagem();
+                mensagem = await inputController.pergunta('Escreva a mensagem: ');
+                actions.escreverMensagem(mensagem);
                 break;
             case '4':
-                estado.mensagemCriptografada = criptografiaController.criptografarRSA(estado.mensagemInput,estado.e,estado.n);
-                chavesController.atualizarMensagemAtual(estado.mensagemCriptografada);
-                chavesController.adicionarMensagemHistorico(estado.mensagemInput,estado.mensagemCriptografada);
+                let criptografia = criptografiaController.criptografarRSA(estadoRSA.estado.mensagens.mensagem_atual);
+                actions.escreverMensagem(criptografia);
+                actions.adicionarHistorico(mensagem,criptografia);
+                // chavesController.adicionarMensagemHistorico(mensagem,criptografia);
                 break;
             case '5':
-                estado.mensagemDescriptografada = criptografiaController.descriptografarRSA(estado.mensagemCriptografada,estado.d,estado.n);
-                chavesController.atualizarMensagemAtual(estado.mensagemDescriptografada);
+                // debugger;
+                let mensagemD = criptografiaController.descriptografarRSA();
+                // chavesController.atualizarMensagemAtual(mensagemD);
+                actions.escreverMensagem(mensagemD);
                 break;
             case '6':
                 actions.verHistoricoMensagens();
                 break;
             case '7':
-                actions.excluirDados();
+                actions.limparChaves();
                 break;
             case '8':
                 actions.excluirDados();

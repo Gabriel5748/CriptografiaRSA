@@ -20,16 +20,16 @@ function modPow(base, exponent, modulus) {
 
 
 //O power não é muito preciso, para isso usamos exponenciação modular
-function criptografarRSA(mensagem, e, n) {
-
+function criptografarRSA(mensagem) {
     if (!estadoRSA.estado.mensagemEscrita) {
         console.warn('⚠️ Escreva uma mensagem primeiro');
         return;
     }
 
     // Validação básica
-    if (typeof mensagem !== 'string' || !Number.isInteger(e) || !Number.isInteger(n) || n <= 0) {
-        throw new Error('Parâmetros inválidos');
+    if (typeof mensagem !== 'string' || !Number.isInteger(estadoRSA.estado.chavesRSA.e) || !Number.isInteger(estadoRSA.estado.chavesRSA.n) || estadoRSA.estado.chavesRSA.n <= 0) {
+        console.warn('Parâmetros inválidos para criptografia RSA');
+        return;
     }
 
     // Converte cada caractere para código ASCII com padding de 3 dígitos
@@ -37,13 +37,19 @@ function criptografarRSA(mensagem, e, n) {
     for (let i = 0; i < mensagem.length; i++) {
         const code = mensagem.charCodeAt(i);
         if (code > 255) {
-            throw new Error('Caractere não-ASCII encontrado. Use apenas caracteres da tabela ASCII (0-255).');
+            console.warn(`Caractere não-ASCII encontrado (${mensagem[i]} = ${code}). Use apenas caracteres ASCII (0-255).`);
+            continue;
         }
-        asciiCodes.push(code.toString().padStart(3, '0')); // <- padding aqui
+        asciiCodes.push(code.toString().padStart(3, '0'));
+    }
+
+    if (asciiCodes.length === 0) {
+        console.warn('Nenhum caractere válido encontrado para criptografar.');
+        return;
     }
 
     // Define o tamanho ideal do bloco baseado em n
-    const maxDigits = n.toString().length;
+    const maxDigits = estadoRSA.estado.chavesRSA.n.toString().length;
     const blockSize = Math.max(1, Math.floor((maxDigits - 1) / 3)); // 3 dígitos por caractere
 
     const cifrados = [];
@@ -51,71 +57,96 @@ function criptografarRSA(mensagem, e, n) {
         const bloco = asciiCodes.slice(i, i + blockSize).join('');
         const numeroBloco = BigInt(bloco);
 
-        if (numeroBloco >= BigInt(n)) {
-            throw new Error(`Bloco ${bloco} é maior que n=${n}. Reduza o tamanho do bloco ou use n maior.`);
+        if (numeroBloco >= BigInt(estadoRSA.estado.chavesRSA.n)) {
+            console.warn(`Bloco ${bloco} é maior que n=${estadoRSA.estado.chavesRSA.n}. Reduza o tamanho do bloco ou use n maior.`);
+            continue;
         }
 
-        const cifrado = numeroBloco ** BigInt(e) % BigInt(n);
+        const cifrado = numeroBloco ** BigInt(estadoRSA.estado.chavesRSA.e) % BigInt(estadoRSA.estado.chavesRSA.n);
         cifrados.push(cifrado.toString());
     }
 
-    estado.criptografada = true;
+    if (cifrados.length === 0) {
+        console.warn('Nenhum bloco foi criptografado com sucesso.');
+        return;
+    }
+
+    // estadoRSA.estado.mensagens.mensagem_atual = cifrados.join(' ');
+
+    estadoRSA.estado.criptografada = true;
 
     return cifrados.join(' ');
+
+    // return;
 }
 
-function descriptografarRSA(mensagemC, d, n) {
 
+function descriptografarRSA() {
+    // debugger;
     if (!estadoRSA.estado.criptografada) {
         console.warn('⚠️ Nenhuma mensagem criptografada para descriptografar.');
         return;
     }
 
-    if (typeof mensagemC !== 'string' || !Number.isInteger(d) || !Number.isInteger(n) || n <= 0) {
+    if (typeof estadoRSA.estado.mensagens.mensagem_atual !== 'string' || !Number.isInteger(estadoRSA.estado.chavesRSA.d) || !Number.isInteger(estadoRSA.estado.chavesRSA.n) || estadoRSA.estado.chavesRSA.n <= 0) {
         console.warn('Parâmetros inválidos para descriptografia RSA');
+        return;
     }
 
-    const blocosCifrados = mensagemC.split(' ').filter(Boolean).map(num => {
-        const parsed = parseInt(num, 10);
-        if (isNaN(parsed)) {
-            throw new Error('Mensagem cifrada contém valores não numéricos');
-        }
-        return parsed;
-    });
+    let blocosCifrados = [];
+    try {
+        blocosCifrados = estadoRSA.estado.mensagens.mensagem_atual.split(' ').filter(Boolean).map(num => {
+            const parsed = parseInt(num, 10);
+            if (isNaN(parsed)) {
+                console.warn('Mensagem cifrada contém valores não numéricos:', num);
+                return null;
+            }
+            return parsed;
+        }).filter(num => num !== null);
+    } catch (e) {
+        console.warn('Erro ao processar a mensagem cifrada:', e.message);
+        return;
+    }
 
     let mensagemASCII = '';
     for (const bloco of blocosCifrados) {
-        if (bloco >= n || bloco < 0) {
-            throw new Error(`Valor cifrado ${bloco} é inválido para o módulo n=${n}`);
+        if (bloco >= estadoRSA.estado.chavesRSA.n || bloco < 0) {
+            console.warn(`Valor cifrado ${bloco} é inválido para o módulo n=${n}`);
+            continue;
         }
 
         let numeroDescriptografado;
         try {
-            numeroDescriptografado = Number(modPow(BigInt(bloco), BigInt(d), BigInt(n)));
+            numeroDescriptografado = Number(modPow(BigInt(bloco), BigInt(estadoRSA.estado.chavesRSA.d), BigInt(estadoRSA.estado.chavesRSA.n)));
         } catch (e) {
-            throw new Error(`Erro durante a descriptografia: ${e.message}. Chaves podem estar incorretas.`);
+            console.warn(`Erro durante a descriptografia: ${e.message}. Chaves podem estar incorretas.`);
+            continue;
         }
 
-        // Converte o número de volta para os códigos ASCII dos caracteres originais
         let numeroBloco = numeroDescriptografado.toString();
-
-        // Preenche à esquerda com zeros para que o comprimento seja múltiplo de 3
         if (numeroBloco.length % 3 !== 0) {
             numeroBloco = numeroBloco.padStart(Math.ceil(numeroBloco.length / 3) * 3, '0');
         }
 
-        // Separa a string em blocos de 3 dígitos e converte para caracteres
         for (let i = 0; i < numeroBloco.length; i += 3) {
             const asciiCode = parseInt(numeroBloco.slice(i, i + 3), 10);
             if (asciiCode < 0 || asciiCode > 255) {
-                throw new Error(`Código ASCII inválido: ${asciiCode}. Chaves podem estar incorretas.`);
+                console.warn(`Código ASCII inválido: ${asciiCode}. Chaves podem estar incorretas.`);
+                continue;
             }
             mensagemASCII += String.fromCharCode(asciiCode);
         }
     }
 
+    estadoRSA.estado.criptografada = false;
+
     return mensagemASCII;
+
+    // estadoRSA.estado.mensagens.mensagem_atual = mensagemASCII;
+
+    // return;
 }
+
 
 
 module.exports = { criptografarRSA, descriptografarRSA }

@@ -10,38 +10,8 @@ function salvarEstado(dados) {
     fs.writeFileSync(arquivo, JSON.stringify(dados, null, 4), 'utf-8');
 }
 
-// Modificando o estado
-function atualizarChaves(chavePublica, chavePrivada, n,coprimos) {
-    if(!estado.primosSelecionados){
-        console.warn("⚠️  Selecione os números primos");
-        return;
-    }
-
-    if(!estado.chavesGeradas){
-        estado.chavesRSA.e = chavePublica;
-        estado.chavesRSA.d = chavePrivada;
-        estado.chavesRSA.n = n;
-        estado.chavesRSA.coprimos = coprimos;
-    
-        //Deve ter um jeito melhor, mas por enquanto ta bom
-        estado.chavesRSA.chave_publica = `{ ${chavePublica} , ${n} }`;
-        estado.chavesRSA.chave_privada = `{ ${chavePrivada} , ${n} }`;
-    
-        estado.chavesGeradas = true;
-    
-        salvarEstado(estado);
-        console.warn("🔐 Chaves atualizadas!");
-    } else{
-        console.warn("⚠️ Chaves já foram geradas");
-    }
-
-}
-
-function atualizarMensagemAtual(mensagem) {
-
-
-    estado.mensagens.mensagem_atual = mensagem;
-
+ function atualizarMensagemAtual(mensagem) {
+    estado.mensagens.mensagem_atual = mensagem
     estado.mensagemEscrita = true;
 
     salvarEstado(estado);
@@ -53,38 +23,67 @@ function atualizarPrimos(primo1, primo2) {
     //     console.warn("⚠️ Você já calculou as chaves. Para escolher novos primos, exclua os dados atuais (opção 7)");
     //     return;
     // }
-        estado.chavesRSA.p = primo1;
-        estado.chavesRSA.q = primo2;
-    
-        estado.primosSelecionados = true;
-    
-        salvarEstado(estado);
+    estado.chavesRSA.p = primo1;
+    estado.chavesRSA.q = primo2;
+
+    estado.primosSelecionados = true;
+
+    salvarEstado(estado);
+}
+
+const calcChaves = require('../chaves/calculo_chaves');
+
+function atualizarChaves() {
+
+    if (!estado.primosSelecionados) {
+        console.warn("⚠️  Selecione os números primos");
+        return;
+    }
+
+    //Já calculou - não será possível mudá-la novamente
+    if(estado.chavesGeradas){
+        console.warn("⚠️ Chaves já foram geradas");
+        return;
+    }
+
+    estado.chavesRSA.n = calcChaves.acharN(estado.chavesRSA.p, estado.chavesRSA.q);
+    estado.chavesRSA.coprimos = calcChaves.totiente(estado.chavesRSA.p, estado.chavesRSA.q);
+    estado.chavesRSA.e = calcChaves.calcularE(estado.chavesRSA.n);
+    estado.chavesRSA.d = calcChaves.acharD(estado.chavesRSA.e, estado.chavesRSA.coprimos);
+
+    estado.chavesGeradas = true;
+
+    salvarEstado(estado);
 }
 
 function adicionarMensagemHistorico(mensagem, criptografia) {
-    if (!estado.mensagens) estado.mensagens = { historico: [] };
+    if (!estado.mensagens) estado.mensagens = {};
     if (!Array.isArray(estado.mensagens.historico)) estado.mensagens.historico = [];
-    if(!estado.mensagemEscrita){
-        return;
-    }
+
     const objeto = {
         mensagem: mensagem,
         criptografia: criptografia,
         chaves: {
-            publica: estado.chavesRSA.chave_publica,
-            privada: estado.chavesRSA.chave_privada,
+            publica: `{${estado.chavesRSA.e},${estado.chavesRSA.n}}`,
+            privada: `{${estado.chavesRSA.d},${estado.chavesRSA.n}}`,
         }
     };
 
-    if (estado.mensagens.historico.some(item =>
-        JSON.stringify(item) === JSON.stringify(objeto)
-    )) {
+    const camposValidos = objeto.mensagem != null &&
+        objeto.criptografia != null;
+
+    if (!camposValidos) {
         return;
-    } else {
-        estado.mensagens.historico.push(objeto);
     }
 
-    salvarEstado(estado);
+    const jaExiste = estado.mensagens.historico
+        .filter(item => item != null)
+        .some(item => JSON.stringify(item) === JSON.stringify(objeto));
+
+    if (!jaExiste) {
+        estado.mensagens.historico.push(objeto);
+        salvarEstado(estado);
+    }
 }
 
 
@@ -100,22 +99,49 @@ function verHistorico() {
     }
 }
 
-function limparDados() {
+function limparChaves() {
     for (let chave in estado.chavesRSA) {
         estado.chavesRSA[chave] = null;
     }
 
+    estado.primosSelecionados = false;
+    estado.chavesGeradas = false;
+
+    salvarEstado(estado);
+
+}
+
+function limparMensagens() {
     for (let chave in estado.mensagens) {
         estado.mensagens[chave] = null;
     }
+}
 
+function limparEstado() {
     estado.primosSelecionados = false,
-    estado.chavesGeradas = false,
-    estado.mensagemEscrita = false,
-    estado.criptografada = false
+        estado.chavesGeradas = false,
+        estado.mensagemEscrita = false,
+        estado.criptografada = false
+
+}
+
+function limparDados() {
+    limparChaves();
+    limparMensagens();
+    limparEstado();
 
     salvarEstado(estado);
 }
 
 
-module.exports = { estado,atualizarChaves, atualizarMensagemAtual, atualizarPrimos,adicionarMensagemHistorico, verHistorico, limparDados };
+module.exports = {
+    estado,
+    salvarEstado,
+    atualizarChaves,
+    atualizarMensagemAtual,
+    atualizarPrimos,
+    adicionarMensagemHistorico,
+    verHistorico,
+    limparChaves,
+    limparDados
+};

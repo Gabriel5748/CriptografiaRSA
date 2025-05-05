@@ -6,18 +6,14 @@
         "n": null,
         "e": null,
         "d": null,
-        "coprimos": null,
-        "chave_publica": null,
-        "chave_privada": null
+        "coprimos": null
     },
     "mensagens": {
-        "historico": null,
-        "mensagem_atual": null
+        "mensagem_atual": null,
+        "historico": null
     },
     "primosSelecionados": false,
     "chavesGeradas": false,
     "mensagemEscrita": false,
-    "criptografada": false,
-    "p": "17",
-    "q": "67"
+    "criptografada": false
 }
