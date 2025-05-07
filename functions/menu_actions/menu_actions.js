@@ -1,69 +1,115 @@
-const estadoRSA = require('../../chaves/leitura_chaves');
-const auxFunctionController = require('../../functions/aux_functions');
 const inputController = require('./input_utils');
-const chavesController = require('../../chaves/leitura_chaves');
-// const { acharN, totiente, calcularE, acharD } = require('../../chaves/calculo_chaves');
 const criptografiaController = require('../../criptografia/criptografiaRSA');
 
+const rsaState = require('../../models/rsa_state');
+const stateUtils = require('../../models/rsa_utils');
+
 async function escolherNumerosPrimos() {
-    if (!estadoRSA.estado.primosSelecionados) {
-        do {
-            estadoRSA.estado.chavesRSA.p = await inputController.pergunta('Informe um número primo: ');
-            if (!auxFunctionController.verificarPrimo(Number(estadoRSA.estado.chavesRSA.p))) {
-                console.log('Número inválido! Digite um número primo.');
-            }
-        } while (!auxFunctionController.verificarPrimo(Number(estadoRSA.estado.chavesRSA.p)));
+    if (rsaState.temPrimosSelecionados()) {
+        console.warn("Primos já selecionados");
+        return;
+    }
+    do {
+        p = await inputController.pergunta('Informe um número primo: ');
+        if (!stateUtils.validarPrimo(Number(p))) {
+            console.warn('Número inválido! Digite um número primo.');
+        }
+    } while (!stateUtils.validarPrimo(Number(p)));
 
-        do {
-            estadoRSA.estado.chavesRSA.q = await inputController.pergunta('Informe outro número primo: ');
-            if (!auxFunctionController.verificarPrimo(Number(estadoRSA.estado.chavesRSA.q))) {
-                console.log('Número inválido! Digite um número primo.');
-            }
-        } while (!auxFunctionController.verificarPrimo(Number(estadoRSA.estado.chavesRSA.q)));
+    do {
+        q = await inputController.pergunta('Informe um número primo: ');
+        if (!stateUtils.validarPrimo(Number(q))) {
+            console.warn('Número inválido! Digite um número primo.');
+        }
+    } while (!stateUtils.validarPrimo(Number(q)));
 
-        chavesController.atualizarPrimos(estadoRSA.estado.chavesRSA.p, estadoRSA.estado.chavesRSA.q);
-    } else {
-        console.warn("⚠️  Você já calculou as chaves. Para escolher novos primos, exclua os dados atuais (opção 7)");
+    rsaState.atualizarPrimos(p, q);
+}
+
+function calcularChaves() {
+    try {
+
+        if (!stateUtils.podeGerarChaves()) {
+            console.warn('Chaves já foram geradas, apague-as para definir novas chaves (Opção 7');
+        } else {
+            rsaState.atualizarChaves();
+            console.warn('Chaves geradas com sucesso!');
+            // n: ${rsaState.estado.chavesRSA.n}
+            // e: ${rsaState.estado.chavesRSA.e}
+            // d: ${rsaState.estado.chavesRSA.d}`);
+        }
+    } catch (error) {
+        console.warn(`Erro ao gerar chaves: ${error.message}`);
     }
 }
 
-
-function calcularChaves() {
-    chavesController.atualizarChaves();
-}
-
-function escreverMensagem(mensagem) {
-    chavesController.atualizarMensagemAtual(mensagem);
+async function escreverMensagem() {
+    const mensagem = await inputController.pergunta('Escreva a mensagem: ');
+    if (stateUtils.validarMensagem(mensagem)) {
+        rsaState.atualizarMensagemAtual(mensagem);
+        console.warn('Mensagem salva com sucesso!');
+    } else {
+        console.warn('Mensagem inválida!');
+    }
 }
 
 function criptografarMensagem() {
-    
-    let mensagemC = criptografiaController.criptografarRSA(estadoRSA.estado.mensagens.mensagem_atual, estadoRSA.estado.chavesRSA.e, estadoRSA.estado.chavesRSA.n);
-    chavesController.adicionarMensagemHistorico(estadoRSA.estado.mensagens.mensagem_atual, mensagemC);
+    try {
+
+        if (stateUtils.podeCriptografar()) {
+            let mensagemOriginal = rsaState.estado.mensagens.mensagem_atual;
+            let mensagemC = criptografiaController.criptografarRSA(mensagemOriginal);
+
+            if (mensagemC) {
+                rsaState.adicionarMensagemHistorico(mensagemOriginal, mensagemC);
+                console.warn('Mensagem criptografada com sucesso!');
+            }
+        } else {
+            console.warn('Não é possível criptografar');
+        }
+    } catch (error) {
+        console.warn(`Erro ao criptografar: ${error.message}`);
+    }
 }
 
 function descriptografarMensagem() {
-    criptografiaController.descriptografarRSA(estadoRSA.estado.mensagemCriptografada, estadoRSA.estado.chavesRSA.d, estadoRSA.estado.chavesRSA.n);
+    try {
+        if (stateUtils.podeDescriptografar) {
+            criptografiaController.descriptografarRSA();
+
+            console.warn('Mensagem descriptografada com sucesso!');
+        } else {
+            console.warn('Não foi possível descriptografar');
+        }
+    } catch (error) {
+        console.warn(`Erro ao descriptografar: ${error.message}`);
+    }
 }
 
-function adicionarHistorico(mensagem,criptografia){
-    chavesController.adicionarMensagemHistorico(mensagem,criptografia);
-}
+// function adicionarHistorico(mensagem, criptografia) {
+//     rsaState.adicionarMensagemHistorico(mensagem, criptografia);
+// }
 
 function verHistoricoMensagens() {
-    chavesController.verHistorico();
+    rsaState.verHistorico();
+}
+
+function limparHistorico(){
+    rsaState.excluirHistorico();
 }
 
 function limparChaves() {
-    chavesController.limparChaves();
+    rsaState.limparChaves();
+    console.warn('Chaves limpas com sucesso!');
 }
 
 function excluirDados() {
-    chavesController.limparDados();
+    rsaState.limparDados();
+    console.warn('Todos os dados foram resetados!');
 }
 
 function fecharPrograma() {
-    console.log("Saindo...");
+    console.warn("Saindo...");
     inputController.rl.close();
 }
 
@@ -73,10 +119,9 @@ module.exports = {
     escreverMensagem,
     criptografarMensagem,
     descriptografarMensagem,
-    adicionarHistorico,
+    limparHistorico,
     verHistoricoMensagens,
     limparChaves,
     excluirDados,
     fecharPrograma
 };
-

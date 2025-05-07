@@ -66,7 +66,7 @@ function acharD(e, totiente) {
 
     // Verifica se o inverso modular de d é válido
     while ((e * d) % totiente !== 1) {
-        console.log(`Atenção: d=${d} não é o inverso modular válido para e=${e}. Tentando novamente.`);
+        console.warn(`Atenção: d=${d} não é o inverso modular válido para e=${e}. Tentando novamente.`);
         // Tentamos novamente com outro valor de 'e'
         e++;
         ({ mdc, x } = euclidesEstendido(e, totiente));

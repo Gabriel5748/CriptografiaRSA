@@ -2,7 +2,7 @@ const { menu } = require('./menu');
 
 function main() {
 
-    menu().catch(error => console.log(error));
+    menu().catch(error => console.warn(error));
 
 }
 

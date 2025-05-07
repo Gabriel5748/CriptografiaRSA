@@ -19,7 +19,7 @@ async function escolherOpcao() {
 
 function fecharPrograma(){
     rl.close();
-    console.log("Saindo...");
+    console.warn("Saindo...");
 }
 
 module.exports = {rl,pergunta,escolherOpcao,fecharPrograma};

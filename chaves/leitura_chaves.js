@@ -92,7 +92,7 @@ function verHistorico() {
         console.warn("Histórico vazio!");
     } else {
         for (const objeto of estado.mensagens.historico) {
-            console.log(
+            console.warn(
                 `\nMensagem: ${objeto.mensagem}\nCriptografia: ${objeto.criptografia}\nChave Pública: ${objeto.chaves.publica}\nChave Privada: ${objeto.chaves.privada}`
             );
         }
