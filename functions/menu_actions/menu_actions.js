@@ -12,14 +12,14 @@ async function escolherNumerosPrimos() {
     do {
         p = await inputController.pergunta('Informe um número primo: ');
         if (!stateUtils.validarPrimo(Number(p))) {
-            console.warn('Número inválido! Digite um número primo.');
+            console.error('Número inválido! Digite um número primo.');
         }
     } while (!stateUtils.validarPrimo(Number(p)));
 
     do {
         q = await inputController.pergunta('Informe um número primo: ');
         if (!stateUtils.validarPrimo(Number(q))) {
-            console.warn('Número inválido! Digite um número primo.');
+            console.error('Número inválido! Digite um número primo.');
         }
     } while (!stateUtils.validarPrimo(Number(q)));
 
@@ -30,16 +30,17 @@ function calcularChaves() {
     try {
 
         if (!stateUtils.podeGerarChaves()) {
-            console.warn('Chaves já foram geradas, apague-as para definir novas chaves (Opção 7');
+            console.error(
+                "Não foi possível gerar as chaves. Verifique se:\n" +
+                "- Dois números primos foram selecionados;\n" +
+                "- As chaves ainda não foram geradas."
+            );
         } else {
             rsaState.atualizarChaves();
             console.warn('Chaves geradas com sucesso!');
-            // n: ${rsaState.estado.chavesRSA.n}
-            // e: ${rsaState.estado.chavesRSA.e}
-            // d: ${rsaState.estado.chavesRSA.d}`);
         }
     } catch (error) {
-        console.warn(`Erro ao gerar chaves: ${error.message}`);
+        console.error(`Erro ao gerar chaves: ${error.message}`);
     }
 }
 
@@ -54,53 +55,30 @@ async function escreverMensagem() {
 }
 
 function criptografarMensagem() {
-    try {
+    let mensagemOriginal = rsaState.estado.mensagens.mensagem_atual;
+    let mensagemC = criptografiaController.criptografarRSA(mensagemOriginal);
 
-        if (stateUtils.podeCriptografar()) {
-            let mensagemOriginal = rsaState.estado.mensagens.mensagem_atual;
-            let mensagemC = criptografiaController.criptografarRSA(mensagemOriginal);
-
-            if (mensagemC) {
-                rsaState.adicionarMensagemHistorico(mensagemOriginal, mensagemC);
-                console.warn('Mensagem criptografada com sucesso!');
-            }
-        } else {
-            console.warn('Não é possível criptografar');
-        }
-    } catch (error) {
-        console.warn(`Erro ao criptografar: ${error.message}`);
-    }
+    rsaState.adicionarMensagemHistorico(mensagemOriginal, mensagemC);
 }
 
 function descriptografarMensagem() {
-    try {
-        if (stateUtils.podeDescriptografar) {
-            criptografiaController.descriptografarRSA();
-
-            console.warn('Mensagem descriptografada com sucesso!');
-        } else {
-            console.warn('Não foi possível descriptografar');
-        }
-    } catch (error) {
-        console.warn(`Erro ao descriptografar: ${error.message}`);
-    }
+    criptografiaController.descriptografarRSA();
 }
-
-// function adicionarHistorico(mensagem, criptografia) {
-//     rsaState.adicionarMensagemHistorico(mensagem, criptografia);
-// }
 
 function verHistoricoMensagens() {
     rsaState.verHistorico();
 }
 
-function limparHistorico(){
+function limparHistorico() {
     rsaState.excluirHistorico();
+    console.warn('Limpando histórico...');
+    console.warn('Histórico limpo!');
+
 }
 
 function limparChaves() {
     rsaState.limparChaves();
-    console.warn('Chaves limpas com sucesso!');
+    console.warn('✅ Todas as chaves foram limpas com sucesso!');
 }
 
 function excluirDados() {

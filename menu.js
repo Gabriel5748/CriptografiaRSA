@@ -5,16 +5,16 @@ async function menu() {
     let opcao;
     
     while (opcao !== '9') {
-        console.warn("\n=== Menu Principal ===");
-        console.warn("1. Escolher números primos");
-        console.warn("2. Calcular chaves");
-        console.warn("3. Escrever mensagem");
-        console.warn("4. Criptografar mensagem");
-        console.warn("5. Descriptografar mensagem");
-        console.warn("6. Ver histórico de mensagens");
-        console.warn("7. Limpar chaves");
-        console.warn("8. Limpar histórico");
-        console.warn("9. Sair");
+        console.log("\n=== Menu Principal ===");
+        console.log("1. Escolher números primos");
+        console.log("2. Calcular chaves");
+        console.log("3. Escrever mensagem");
+        console.log("4. Criptografar mensagem");
+        console.log("5. Descriptografar mensagem");
+        console.log("6. Ver histórico de mensagens");
+        console.log("7. Limpar chaves");
+        console.log("8. Limpar histórico");
+        console.log("9. Sair");
 
         opcao = await inputController.pergunta('Informe a opção desejada: ');
 

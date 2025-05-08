@@ -26,37 +26,43 @@ function modPow(base, exponent, modulus) {
 function criptografarRSA(mensagem) {
     // Verifica pré-condições usando o utilitário
     if (!stateUtils.podeCriptografar()) {
-        console.warn('⚠️  Selecione os primos, calcule as chaves e escreva uma mensagem para poder criptografar');
-        return null;
+        console.error(
+            "Não foi possível criptografar a mensagem. Verifique se:\n" +
+            "- Dois números primos foram selecionados;\n" +
+            "- As chaves foram geradas corretamente;\n" +
+            "- A mensagem foi escrita;\n" +
+            "- A mensagem ainda não está criptografada."
+        );
+        return;
     }
 
     // Validação básica da mensagem
-    if (!stateUtils.validarMensagem(mensagem)) {
-        console.warn('Mensagem inválida para criptografia RSA');
-        return null;
-    }
+    // if (!stateUtils.validarMensagem(mensagem)) {
+    //     console.warn('Mensagem inválida para criptografia RSA');
+    //     return null;
+    // }
 
     // Verifica se as chaves são válidas
-    if (!Number.isInteger(rsaState.estado.chavesRSA.e) || 
-        !Number.isInteger(rsaState.estado.chavesRSA.n) || 
-        rsaState.estado.chavesRSA.n <= 0) {
-        console.warn('Chaves RSA inválidas para criptografia');
-        return null;
-    }
+    // if (!Number.isInteger(rsaState.estado.chavesRSA.e) ||
+    //     !Number.isInteger(rsaState.estado.chavesRSA.n) ||
+    //     rsaState.estado.chavesRSA.n <= 0) {
+    //     // console.error('Chaves RSA inválidas para criptografia');
+    //     return null;
+    // }
 
     // Converte cada caractere para código ASCII com padding de 3 dígitos
     const asciiCodes = [];
     for (let i = 0; i < mensagem.length; i++) {
         const code = mensagem.charCodeAt(i);
         if (code > 255) {
-            console.warn(`Caractere não-ASCII encontrado (${mensagem[i]} = ${code}). Use apenas caracteres ASCII (0-255).`);
+            console.error(`Caractere não-ASCII encontrado (${mensagem[i]} = ${code}). Use apenas caracteres ASCII (0-255).`);
             continue;
         }
         asciiCodes.push(code.toString().padStart(3, '0'));
     }
 
     if (asciiCodes.length === 0) {
-        console.warn('Nenhum caractere válido encontrado para criptografar.');
+        console.error('Nenhum caractere válido encontrado para criptografar.');
         return null;
     }
 
@@ -75,8 +81,8 @@ function criptografarRSA(mensagem) {
         }
 
         const cifrado = modPow(
-            numeroBloco, 
-            BigInt(rsaState.estado.chavesRSA.e), 
+            numeroBloco,
+            BigInt(rsaState.estado.chavesRSA.e),
             BigInt(rsaState.estado.chavesRSA.n)
         );
         cifrados.push(cifrado.toString());
@@ -92,23 +98,30 @@ function criptografarRSA(mensagem) {
     rsaState.estado.mensagens.mensagem_atual = cifrados.join(' ');
     rsaState.salvarEstado();
 
+    console.warn('Mensagem criptografada com sucesso!');
+
     return cifrados.join(' ');
 }
 
 function descriptografarRSA() {
     // Verifica pré-condições usando o utilitário
     if (!stateUtils.podeDescriptografar()) {
-        console.warn('⚠️ Pré-condições não atendidas: Verifique se há mensagem criptografada e chaves válidas');
-        return null;
+        console.error(
+            "Não foi possível descriptografar a mensagem. Verifique se:\n" +
+            "- As chaves foram geradas;\n" +
+            "- A mensagem está criptografada."
+        );
+
+        return;
     }
 
     // Validação das chaves
-    if (!Number.isInteger(rsaState.estado.chavesRSA.d) || 
-        !Number.isInteger(rsaState.estado.chavesRSA.n) || 
-        rsaState.estado.chavesRSA.n <= 0) {
-        console.warn('Chaves RSA inválidas para descriptografia');
-        return null;
-    }
+    // if (!Number.isInteger(rsaState.estado.chavesRSA.d) ||
+    //     !Number.isInteger(rsaState.estado.chavesRSA.n) ||
+    //     rsaState.estado.chavesRSA.n <= 0) {
+    //     // console.warn('Chaves RSA inválidas para descriptografia');
+    //     return null;
+    // }
 
     // Processa os blocos cifrados
     let blocosCifrados = [];
@@ -142,13 +155,13 @@ function descriptografarRSA() {
         try {
             numeroDescriptografado = Number(
                 modPow(
-                    BigInt(bloco), 
-                    BigInt(rsaState.estado.chavesRSA.d), 
+                    BigInt(bloco),
+                    BigInt(rsaState.estado.chavesRSA.d),
                     BigInt(rsaState.estado.chavesRSA.n)
                 )
             );
         } catch (e) {
-            console.warn(`Erro durante descriptografia: ${e.message}. Verifique as chaves.`);
+            console.error(`Erro durante descriptografia: ${e.message}. Verifique as chaves.`);
             continue;
         }
 
@@ -162,7 +175,7 @@ function descriptografarRSA() {
         for (let i = 0; i < numeroBloco.length; i += 3) {
             const asciiCode = parseInt(numeroBloco.slice(i, i + 3), 10);
             if (asciiCode < 0 || asciiCode > 255) {
-                console.warn(`Código ASCII inválido: ${asciiCode}. Verifique as chaves.`);
+                console.error(`Código ASCII inválido: ${asciiCode}. Verifique as chaves.`);
                 continue;
             }
             mensagemASCII += String.fromCharCode(asciiCode);

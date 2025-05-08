@@ -151,7 +151,7 @@ class RSAState {
     // Persiste as alterações
     this.salvarEstado();
 
-    console.warn('✅ Todas as chaves foram limpas com sucesso!');
+    // console.warn('✅ Todas as chaves foram limpas com sucesso!');
   }
 
   limparDados() {

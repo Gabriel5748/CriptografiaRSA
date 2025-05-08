@@ -60,6 +60,13 @@ function adicionarMensagemHistorico(mensagem, criptografia) {
     if (!estado.mensagens) estado.mensagens = {};
     if (!Array.isArray(estado.mensagens.historico)) estado.mensagens.historico = [];
 
+    const chavesRSA = estado.chavesRSA;
+    const chavesValidas = chavesRSA && chavesRSA.e != null && chavesRSA.d != null && chavesRSA.n != null;
+
+    if(!chavesValidas){
+        return;
+    }
+
     const objeto = {
         mensagem: mensagem,
         criptografia: criptografia,
