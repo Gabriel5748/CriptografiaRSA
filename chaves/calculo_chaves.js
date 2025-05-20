@@ -50,31 +50,22 @@ function euclidesEstendido(a, b) {
 }
 
 function acharD(e, totiente) {
-    // Calcula o MDC e o valor de x usando o Algoritmo de Euclides Estendido
     let { mdc, x } = euclidesEstendido(e, totiente);
 
-    // Se o MDC não for 1, tentamos com outro valor de 'e'
     while (mdc !== 1) {
-        // Você pode incrementar ou ajustar 'e' de alguma maneira, por exemplo:
         e++;
-        // Recalcula o MDC com o novo valor de e
         ({ mdc, x } = euclidesEstendido(e, totiente));
     }
 
-    // Calcula o valor de 'd' a partir de 'x'
     let d = ((x % totiente) + totiente) % totiente;
 
-    // Verifica se o inverso modular de d é válido
     while ((e * d) % totiente !== 1) {
         console.warn(`Atenção: d=${d} não é o inverso modular válido para e=${e}. Tentando novamente.`);
-        // Tentamos novamente com outro valor de 'e'
         e++;
         ({ mdc, x } = euclidesEstendido(e, totiente));
-        // Recalcula 'd' com o novo 'e'
         d = ((x % totiente) + totiente) % totiente;
     }
 
-    // Retorna o valor de 'd' quando encontrado um valor válido
     return d;
 }
 

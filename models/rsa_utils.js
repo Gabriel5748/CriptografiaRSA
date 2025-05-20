@@ -22,7 +22,6 @@ module.exports = {
     if (typeof num !== 'number' || !Number.isInteger(num) || num <= 1) {
       return false;
     }
-    // Implementação da verificação de número primo
     for (let i = 2, s = Math.sqrt(num); i <= s; i++) {
       if (num % i === 0) return false;
     }

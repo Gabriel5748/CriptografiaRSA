@@ -3,8 +3,6 @@
 const rsaState = require('../models/rsa_state');
 const stateUtils = require('../models/rsa_utils');
 
-const estadoRSA = require("../chaves/leitura_chaves");
-
 function modPow(base, exponent, modulus) {
     if (modulus === 1n) return 0n;
     let result = 1n;
@@ -14,7 +12,7 @@ function modPow(base, exponent, modulus) {
         if (exponent % 2n === 1n) {
             result = (result * base) % modulus;
         }
-        exponent = exponent >> 1n; // Divide por 2
+        exponent = exponent >> 1n;
         base = (base * base) % modulus;
     }
 
@@ -24,7 +22,6 @@ function modPow(base, exponent, modulus) {
 
 //O power não é muito preciso, para isso usamos exponenciação modular
 function criptografarRSA(mensagem) {
-    // Verifica pré-condições usando o utilitário
     if (!stateUtils.podeCriptografar()) {
         console.error(
             "Não foi possível criptografar a mensagem. Verifique se:\n" +
@@ -36,21 +33,6 @@ function criptografarRSA(mensagem) {
         return;
     }
 
-    // Validação básica da mensagem
-    // if (!stateUtils.validarMensagem(mensagem)) {
-    //     console.warn('Mensagem inválida para criptografia RSA');
-    //     return null;
-    // }
-
-    // Verifica se as chaves são válidas
-    // if (!Number.isInteger(rsaState.estado.chavesRSA.e) ||
-    //     !Number.isInteger(rsaState.estado.chavesRSA.n) ||
-    //     rsaState.estado.chavesRSA.n <= 0) {
-    //     // console.error('Chaves RSA inválidas para criptografia');
-    //     return null;
-    // }
-
-    // Converte cada caractere para código ASCII com padding de 3 dígitos
     const asciiCodes = [];
     for (let i = 0; i < mensagem.length; i++) {
         const code = mensagem.charCodeAt(i);
@@ -66,9 +48,8 @@ function criptografarRSA(mensagem) {
         return null;
     }
 
-    // Define o tamanho ideal do bloco baseado em n
     const maxDigits = rsaState.estado.chavesRSA.n.toString().length;
-    const blockSize = Math.max(1, Math.floor((maxDigits - 1) / 3)); // 3 dígitos por caractere
+    const blockSize = Math.max(1, Math.floor((maxDigits - 1) / 3));
 
     const cifrados = [];
     for (let i = 0; i < asciiCodes.length; i += blockSize) {
@@ -104,7 +85,6 @@ function criptografarRSA(mensagem) {
 }
 
 function descriptografarRSA() {
-    // Verifica pré-condições usando o utilitário
     if (!stateUtils.podeDescriptografar()) {
         console.error(
             "Não foi possível descriptografar a mensagem. Verifique se:\n" +
@@ -115,15 +95,6 @@ function descriptografarRSA() {
         return;
     }
 
-    // Validação das chaves
-    // if (!Number.isInteger(rsaState.estado.chavesRSA.d) ||
-    //     !Number.isInteger(rsaState.estado.chavesRSA.n) ||
-    //     rsaState.estado.chavesRSA.n <= 0) {
-    //     // console.warn('Chaves RSA inválidas para descriptografia');
-    //     return null;
-    // }
-
-    // Processa os blocos cifrados
     let blocosCifrados = [];
     try {
         blocosCifrados = rsaState.estado.mensagens.mensagem_atual
@@ -165,13 +136,11 @@ function descriptografarRSA() {
             continue;
         }
 
-        // Converte para string com padding de 3 dígitos
         let numeroBloco = numeroDescriptografado.toString();
         if (numeroBloco.length % 3 !== 0) {
             numeroBloco = numeroBloco.padStart(Math.ceil(numeroBloco.length / 3) * 3, '0');
         }
 
-        // Converte cada trio de dígitos para caractere ASCII
         for (let i = 0; i < numeroBloco.length; i += 3) {
             const asciiCode = parseInt(numeroBloco.slice(i, i + 3), 10);
             if (asciiCode < 0 || asciiCode > 255) {
@@ -186,9 +155,10 @@ function descriptografarRSA() {
     rsaState.estado.mensagens.mensagem_atual = mensagemASCII;
     rsaState.salvarEstado();
 
+    console.warn('Mensagem descriptografada com sucesso!');
+
     return;
 
-    // return mensagemASCII;
 }
 
 

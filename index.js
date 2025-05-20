@@ -1,4 +1,4 @@
-const { menu } = require('./menu');
+const { menu } = require('./functions/menu');
 
 function main() {
 

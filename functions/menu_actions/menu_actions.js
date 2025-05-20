@@ -33,7 +33,7 @@ function calcularChaves() {
             console.error(
                 "Não foi possível gerar as chaves. Verifique se:\n" +
                 "- Dois números primos foram selecionados;\n" +
-                "- As chaves ainda não foram geradas."
+                "- As chaves já não foram geradas."
             );
         } else {
             rsaState.atualizarChaves();

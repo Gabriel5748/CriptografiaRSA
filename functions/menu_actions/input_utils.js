@@ -13,13 +13,9 @@ const pergunta = (pergunta) => {
     });
 }
 
-async function escolherOpcao() {
-    await pergunta('Informe a opção desejada: ');
-}
-
 function fecharPrograma(){
     rl.close();
     console.warn("Saindo...");
 }
 
-module.exports = {rl,pergunta,escolherOpcao,fecharPrograma};
+module.exports = {rl,pergunta,fecharPrograma};

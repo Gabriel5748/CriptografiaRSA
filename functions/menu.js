@@ -1,5 +1,5 @@
-const inputController = require('./functions/menu_actions/input_utils');
-const actions = require('./functions/menu_actions/menu_actions');
+const inputController = require('./menu_actions/input_utils');
+const actions = require('./menu_actions/menu_actions');
 
 async function menu() {
     let opcao;

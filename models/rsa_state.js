@@ -85,6 +85,14 @@ class RSAState {
 
   adicionarMensagemHistorico(mensagem, criptografia) {
     if (!mensagem || mensagem.trim() === '') return;
+
+    const chavesRSA = this.estado.chavesRSA;
+    const chavesValidas = chavesRSA && chavesRSA.e != null && chavesRSA.d != null && chavesRSA.n != null;
+
+    if (!chavesValidas) {
+      return;
+    }
+
     let objeto = {
       mensagem: mensagem,
       criptografia: criptografia,
@@ -94,14 +102,18 @@ class RSAState {
       }
     }
 
+    const camposValidos = objeto.mensagem != null &&
+      objeto.criptografia != null;
+
+    if (!camposValidos) {
+      return;
+    }
+
+
     const historico = this.estado.mensagens.historico;
 
-    const jaExiste = historico.some(item =>
-      item.mensagem === objeto.mensagem &&
-      item.criptografia === objeto.criptografia &&
-      item.chaves.publica === objeto.chaves.publica &&
-      item.chaves.privada === objeto.chaves.privada
-    );
+    const jaExiste = historico.filter(item => item != null)
+      .some(item => JSON.stringify(item) === JSON.stringify(objeto));
 
     if (!jaExiste) {
       historico.push(objeto);
@@ -109,7 +121,7 @@ class RSAState {
     }
   }
 
-  excluirHistorico(){
+  excluirHistorico() {
     this.estado.mensagens.historico = [];
     this.salvarEstado();
   }
@@ -133,7 +145,6 @@ class RSAState {
 
 
   limparChaves() {
-    // Reseta todos os valores das chaves para null
     this.estado.chavesRSA = {
       p: null,
       q: null,
@@ -143,15 +154,12 @@ class RSAState {
       coprimos: null
     };
 
-    // Atualiza os status
     this.estado.primosSelecionados = false;
     this.estado.chavesGeradas = false;
-    this.estado.criptografada = false; // Adicionado pois sem chaves não pode haver mensagem criptografada
+    this.estado.criptografada = false;
 
-    // Persiste as alterações
     this.salvarEstado();
 
-    // console.warn('✅ Todas as chaves foram limpas com sucesso!');
   }
 
   limparDados() {
